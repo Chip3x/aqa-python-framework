@@ -28,15 +28,15 @@ class BasePage:
         """Get full page URL."""
         return f"{self.base_url}{self.url_path}"
 
-    @allure.step("Open page: {0.url}")
     def open(self: T) -> T:
         """Open page by URL.
 
         Returns:
             Self for chaining.
         """
-        logger.info(f"Opening page: {self.url}")
-        self.page.goto(self.url)
+        with allure.step(f"Open page: {self.url}"):
+            logger.info(f"Opening page: {self.url}")
+            self.page.goto(self.url)
         return self
 
     @allure.step("Wait for page load")

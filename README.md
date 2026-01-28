@@ -201,7 +201,7 @@ Pipeline включает:
 
 ### API тест
 
-```python
+"""python
 @allure.epic("API")
 @allure.feature("Users")
 @pytest.mark.api
@@ -212,11 +212,11 @@ class TestUsers:
     def test_create_user(self, users_api, user_data):
         user = users_api.create_user(user_data)
         assert user.email == user_data.email
-```
+"""
 
 ### UI тест
 
-```python
+"""python
 @allure.epic("UI")
 @allure.feature("Login")
 @pytest.mark.ui
@@ -228,7 +228,7 @@ class TestLogin:
         login_page.open()
         login_page.login(email, password)
         dashboard_page.assert_dashboard_loaded()
-```
+"""
 
 ## Лицензия
 
