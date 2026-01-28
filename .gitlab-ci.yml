@@ -1,0 +1,135 @@
+stages:
+  - lint
+  - test
+  - report
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+  POETRY_HOME: "$CI_PROJECT_DIR/.poetry"
+  POETRY_VIRTUALENVS_IN_PROJECT: "true"
+  ALLURE_RESULTS: "allure-results"
+
+default:
+  image: python:3.11-slim
+  before_script:
+    - pip install poetry
+    - poetry install --no-interaction
+
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - .pip-cache/
+    - .venv/
+    - .poetry/
+
+# ==================== LINT ====================
+
+lint:
+  stage: lint
+  script:
+    - poetry run ruff check .
+    - poetry run ruff format --check .
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+type-check:
+  stage: lint
+  script:
+    - poetry run mypy src/ --ignore-missing-imports
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  allow_failure: true
+
+# ==================== TEST ====================
+
+.test_template:
+  stage: test
+  before_script:
+    - pip install poetry
+    - poetry install --no-interaction
+    - poetry run playwright install --with-deps chromium
+  artifacts:
+    when: always
+    paths:
+      - $ALLURE_RESULTS
+    expire_in: 7 days
+
+test:api:smoke:
+  extends: .test_template
+  script:
+    - poetry run pytest tests/api/ -m smoke --alluredir=$ALLURE_RESULTS -n auto
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+test:api:regression:
+  extends: .test_template
+  script:
+    - poetry run pytest tests/api/ --alluredir=$ALLURE_RESULTS -n auto
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+
+test:ui:smoke:
+  extends: .test_template
+  script:
+    - poetry run pytest tests/ui/ -m smoke --alluredir=$ALLURE_RESULTS
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+test:ui:regression:
+  extends: .test_template
+  script:
+    - poetry run pytest tests/ui/ --alluredir=$ALLURE_RESULTS
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+
+test:all:staging:
+  extends: .test_template
+  variables:
+    ENV: staging
+  script:
+    - poetry run pytest --env=staging --alluredir=$ALLURE_RESULTS -n auto
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  when: manual
+
+# ==================== REPORT ====================
+
+allure:report:
+  stage: report
+  image: frankescobar/allure-docker-service:latest
+  script:
+    - allure generate $ALLURE_RESULTS -o allure-report --clean
+  artifacts:
+    paths:
+      - allure-report
+    expire_in: 30 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  needs:
+    - job: test:api:smoke
+      optional: true
+    - job: test:api:regression
+      optional: true
+    - job: test:ui:smoke
+      optional: true
+    - job: test:ui:regression
+      optional: true
+
+pages:
+  stage: report
+  script:
+    - mkdir -p public
+    - cp -r allure-report/* public/
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  needs:
+    - allure:report

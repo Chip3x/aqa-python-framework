@@ -1,0 +1,78 @@
+[tool.poetry]
+name = "aqa-python"
+version = "1.0.0"
+description = "Test automation framework for UI and API testing"
+authors = ["QA Team"]
+readme = "README.md"
+packages = [{ include = "src" }, { include = "config" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pytest = "^8.3"
+playwright = "^1.49"
+httpx = "^0.28"
+pydantic = "^2.10"
+pydantic-settings = "^2.7"
+allure-pytest = "^2.13"
+pytest-xdist = "^3.5"
+pytest-rerunfailures = "^14.0"
+faker = "^33.1"
+loguru = "^0.7"
+python-dotenv = "^1.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.8"
+mypy = "^1.13"
+pre-commit = "^4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
+markers = [
+    "smoke: Quick smoke tests",
+    "regression: Full regression tests",
+    "api: API tests",
+    "ui: UI tests",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "SIM",    # flake8-simplify
+]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "config", "tests", "fixtures", "testdata"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
