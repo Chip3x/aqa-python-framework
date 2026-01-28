@@ -19,6 +19,7 @@ pytest-rerunfailures = "^14.0"
 faker = "^33.1"
 loguru = "^0.7"
 python-dotenv = "^1.0"
+email-validator = "^2.3.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.8"
