@@ -1,195 +1,195 @@
 # AQA Python Framework
 
-Фреймворк для автоматизации UI и API тестирования.
+A framework for UI and API test automation.
 
-## Технологический стек
+## Technology Stack
 
 - **Python 3.11+**
-- **pytest** — тестовый фреймворк
-- **Playwright** — UI автоматизация
-- **httpx** — HTTP клиент для API
-- **Pydantic** — валидация данных
-- **Allure** — отчётность
-- **Poetry** — управление зависимостями
+- **pytest** — test framework
+- **Playwright** — UI automation
+- **httpx** — HTTP client for API
+- **Pydantic** — data validation
+- **Allure** — reporting
+- **Poetry** — dependency management
 
-## Установка
+## Installation
 
-### 1. Клонирование репозитория
+### 1. Clone the repository
 
 ```bash
 git clone <repository-url>
 cd AQA_Python
 ```
 
-### 2. Установка зависимостей
+### 2. Install dependencies
 
 ```bash
-# Установка Poetry (если не установлен)
+# Install Poetry (if not installed)
 pip install poetry
 
-# Установка зависимостей проекта
+# Install project dependencies
 poetry install
 
-# Установка браузеров Playwright
+# Install Playwright browsers
 poetry run playwright install
 ```
 
-### 3. Настройка окружения
+### 3. Environment setup
 
 ```bash
-# Копировать шаблон конфигурации
+# Copy configuration template
 cp config/.env.example config/.env
 
-# Заполнить секреты в config/.env
+# Fill in secrets in config/.env
 ```
 
-## Структура проекта
+## Project Structure
 
 ```
 AQA_Python/
-├── config/                 # Конфигурация
+├── config/                 # Configuration
 │   ├── settings.py        # Pydantic Settings
-│   ├── .env.example       # Шаблон переменных
-│   └── environments/      # Env-файлы окружений
-├── src/                   # Исходный код
-│   ├── api/              # API клиент и endpoints
-│   ├── ui/               # Page Objects и компоненты
-│   └── utils/            # Утилиты
-├── tests/                 # Тесты
-│   ├── api/              # API тесты
-│   └── ui/               # UI тесты
-├── fixtures/              # Pytest фикстуры
-├── testdata/              # Тестовые данные и фабрики
-└── pyproject.toml         # Конфигурация проекта
+│   ├── .env.example       # Variables template
+│   └── environments/      # Environment-specific env files
+├── src/                   # Source code
+│   ├── api/              # API client and endpoints
+│   ├── ui/               # Page Objects and components
+│   └── utils/            # Utilities
+├── tests/                 # Tests
+│   ├── api/              # API tests
+│   └── ui/               # UI tests
+├── fixtures/              # Pytest fixtures
+├── testdata/              # Test data and factories
+└── pyproject.toml         # Project configuration
 ```
 
-## Запуск тестов
+## Running Tests
 
-### Базовые команды
+### Basic commands
 
 ```bash
-# Все тесты
+# All tests
 poetry run pytest
 
-# API тесты
+# API tests
 poetry run pytest tests/api/
 
-# UI тесты
+# UI tests
 poetry run pytest tests/ui/
 
-# Smoke тесты
+# Smoke tests
 poetry run pytest -m smoke
 
-# Regression тесты
+# Regression tests
 poetry run pytest -m regression
 ```
 
-### Параметры запуска
+### Run parameters
 
 ```bash
-# Выбор окружения
+# Select environment
 poetry run pytest --env=staging
 
-# Выбор браузера
+# Select browser
 poetry run pytest --browser=firefox
 
-# Запуск в headed режиме
+# Run in headed mode
 poetry run pytest --headed
 
-# Параллельный запуск
+# Parallel run
 poetry run pytest -n auto
 
-# С Allure отчётом
+# With Allure report
 poetry run pytest --alluredir=allure-results
 ```
 
-### Комбинированные примеры
+### Combined examples
 
 ```bash
-# API smoke на staging
+# API smoke on staging
 poetry run pytest tests/api/ -m smoke --env=staging -n auto
 
-# UI тесты в Firefox headed
+# UI tests in Firefox headed
 poetry run pytest tests/ui/ --browser=firefox --headed
 
-# Полный прогон с отчётом
+# Full run with report
 poetry run pytest --alluredir=allure-results -n auto
 ```
 
-## Allure отчёты
+## Allure Reports
 
 ```bash
-# Генерация отчёта
+# Generate report
 allure generate allure-results -o allure-report --clean
 
-# Открытие отчёта
+# Open report
 allure open allure-report
 
-# Или одной командой
+# Or with one command
 allure serve allure-results
 ```
 
-## Разработка
+## Development
 
-### Линтинг и форматирование
+### Linting and formatting
 
 ```bash
-# Проверка кода
+# Check code
 poetry run ruff check .
 
-# Автоисправление
+# Auto-fix
 poetry run ruff check . --fix
 
-# Форматирование
+# Format
 poetry run ruff format .
 
-# Проверка типов
+# Type checking
 poetry run mypy src/
 ```
 
-### Pre-commit хуки
+### Pre-commit hooks
 
 ```bash
-# Установка хуков
+# Install hooks
 poetry run pre-commit install
 
-# Запуск на всех файлах
+# Run on all files
 poetry run pre-commit run --all-files
 ```
 
-## Конфигурация
+## Configuration
 
-### Переменные окружения
+### Environment Variables
 
-| Переменная | Описание | По умолчанию |
-|------------|----------|--------------|
-| `ENV` | Окружение (dev/staging) | dev |
-| `BASE_URL` | URL для UI тестов | - |
-| `API_URL` | URL для API тестов | - |
-| `BROWSER` | Браузер (chromium/firefox/webkit) | chromium |
-| `HEADLESS` | Headless режим | true |
-| `DEFAULT_TIMEOUT` | Таймаут UI (ms) | 30000 |
-| `API_TIMEOUT` | Таймаут API (ms) | 10000 |
-| `TEST_USER_EMAIL` | Email тестового пользователя | - |
-| `TEST_USER_PASSWORD` | Пароль тестового пользователя | - |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `ENV` | Environment (dev/staging) | dev |
+| `BASE_URL` | URL for UI tests | - |
+| `API_URL` | URL for API tests | - |
+| `BROWSER` | Browser (chromium/firefox/webkit) | chromium |
+| `HEADLESS` | Headless mode | true |
+| `DEFAULT_TIMEOUT` | UI timeout (ms) | 30000 |
+| `API_TIMEOUT` | API timeout (ms) | 10000 |
+| `TEST_USER_EMAIL` | Test user email | - |
+| `TEST_USER_PASSWORD` | Test user password | - |
 
-### Добавление нового окружения
+### Adding a new environment
 
-1. Создать файл `config/environments/<env>.env`
-2. Добавить окружение в `settings.py` Literal type
-3. Использовать: `pytest --env=<env>`
+1. Create file `config/environments/<env>.env`
+2. Add environment to `settings.py` Literal type
+3. Use: `pytest --env=<env>`
 
 ## CI/CD
 
-Pipeline включает:
+Pipeline includes:
 
-- **lint** — проверка кода (ruff, mypy)
-- **test** — запуск тестов (smoke на MR, regression на main)
-- **report** — генерация Allure отчёта
+- **lint** — code checking (ruff, mypy)
+- **test** — run tests (smoke on MR, regression on main)
+- **report** — Allure report generation
 
 ### GitLab CI Variables
 
-Добавить в Settings → CI/CD → Variables:
+Add in Settings → CI/CD → Variables:
 
 - `TEST_USER_EMAIL`
 - `TEST_USER_PASSWORD`
@@ -197,9 +197,9 @@ Pipeline включает:
 - `OAUTH_CLIENT_ID`
 - `OAUTH_CLIENT_SECRET`
 
-## Написание тестов
+## Writing Tests
 
-### API тест
+### API test
 
 """python
 @allure.epic("API")
@@ -214,7 +214,7 @@ class TestUsers:
         assert user.email == user_data.email
 """
 
-### UI тест
+### UI test
 
 """python
 @allure.epic("UI")
@@ -230,6 +230,6 @@ class TestLogin:
         dashboard_page.assert_dashboard_loaded()
 """
 
-## Лицензия
+## License
 
 MIT
