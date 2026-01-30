@@ -27,6 +27,8 @@ htmlcov/
 .coverage
 coverage.xml
 *.cover
+.hypothesis/
+.tox/
 
 # Allure
 allure-results/
@@ -40,6 +42,12 @@ config/.env
 test-results/
 playwright-report/
 playwright/.cache/
+blob-report/
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
+.cache/
 
 # Logs
 logs/
