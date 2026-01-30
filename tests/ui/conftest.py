@@ -1,6 +1,7 @@
 import pytest
 from playwright.sync_api import Page
 
+from config.settings import Settings
 from src.ui.components.header import Header
 from src.ui.components.sidebar import Sidebar
 from src.ui.pages.dashboard_page import DashboardPage
@@ -33,7 +34,7 @@ def sidebar(page: Page) -> Sidebar:
 
 
 @pytest.fixture
-def logged_in_dashboard(authenticated_page: Page) -> DashboardPage:
+def logged_in_dashboard(settings: Settings, authenticated_page: Page) -> DashboardPage:
     """Get dashboard page after login.
 
     Args:
@@ -42,4 +43,4 @@ def logged_in_dashboard(authenticated_page: Page) -> DashboardPage:
     Returns:
         Dashboard page instance.
     """
-    return DashboardPage(authenticated_page)
+    return DashboardPage(authenticated_page, settings.base_url)

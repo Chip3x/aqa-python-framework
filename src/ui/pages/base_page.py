@@ -3,7 +3,6 @@ from typing import Literal, TypeVar
 import allure
 from playwright.sync_api import Page, expect
 
-from config import settings
 from src.utils.logger import logger
 
 T = TypeVar("T", bound="BasePage")
@@ -14,14 +13,15 @@ class BasePage:
 
     url_path: str = ""
 
-    def __init__(self, page: Page) -> None:
+    def __init__(self, page: Page, base_url: str) -> None:
         """Initialize base page.
 
         Args:
             page: Playwright page instance.
+            base_url: Base URL for UI tests.
         """
         self.page = page
-        self.base_url = settings.base_url
+        self.base_url = base_url
 
     @property
     def url(self) -> str:

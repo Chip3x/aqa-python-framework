@@ -161,17 +161,17 @@ poetry run pre-commit run --all-files
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `ENV` | Environment (dev/staging) | dev |
-| `BASE_URL` | URL for UI tests | - |
-| `API_URL` | URL for API tests | - |
-| `BROWSER` | Browser (chromium/firefox/webkit) | chromium |
-| `HEADLESS` | Headless mode | true |
-| `DEFAULT_TIMEOUT` | UI timeout (ms) | 30000 |
-| `API_TIMEOUT` | API timeout (ms) | 10000 |
-| `TEST_USER_EMAIL` | Test user email | - |
-| `TEST_USER_PASSWORD` | Test user password | - |
+| Variable             | Description                       | Default  |
+|----------------------|-----------------------------------|----------|
+| `ENV`                | Environment (dev/staging)         | dev      |
+| `BASE_URL`           | URL for UI tests                  | -        |
+| `API_URL`            | URL for API tests                 | -        |
+| `BROWSER`            | Browser (chromium/firefox/webkit) | chromium |
+| `HEADLESS`           | Headless mode                     | false    |
+| `DEFAULT_TIMEOUT`    | UI timeout (ms)                   | 15000    |
+| `API_TIMEOUT`        | API timeout (ms)                  | 10000    |
+| `TEST_USER_EMAIL`    | Test user email                   | -        |
+| `TEST_USER_PASSWORD` | Test user password                | -        |
 
 ### Adding a new environment
 
@@ -229,7 +229,3 @@ class TestLogin:
         login_page.login(email, password)
         dashboard_page.assert_dashboard_loaded()
 """
-
-## License
-
-MIT

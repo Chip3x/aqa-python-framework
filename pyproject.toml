@@ -20,11 +20,13 @@ faker = "^33.1"
 loguru = "^0.7"
 python-dotenv = "^1.0"
 email-validator = "^2.3.0"
+jsonschema = "^4.23"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.8"
 mypy = "^1.13"
 pre-commit = "^4.0"
+types-jsonschema = "^4.26.0.20260109"
 
 [build-system]
 requires = ["poetry-core"]
@@ -39,13 +41,23 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
+    "--alluredir=allure-results",
 ]
 markers = [
     "smoke: Quick smoke tests",
     "regression: Full regression tests",
     "api: API tests",
     "ui: UI tests",
+    "slow: Slow running tests",
 ]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)s] %(message)s"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
 [tool.ruff]
 target-version = "py311"

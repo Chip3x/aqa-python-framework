@@ -1,4 +1,6 @@
+import json
 import random
+import re
 import string
 from datetime import datetime, timedelta
 
@@ -90,3 +92,68 @@ def mask_sensitive_data(data: str, visible_chars: int = 4) -> str:
     if len(data) <= visible_chars:
         return "*" * len(data)
     return data[:visible_chars] + "*" * (len(data) - visible_chars)
+
+
+SENSITIVE_KEYS = {
+    "password",
+    "pass",
+    "secret",
+    "token",
+    "jwt-token",
+    "access_token",
+    "refresh_token",
+    "client_secret",
+    "authorization",
+    "api_key",
+    "apikey",
+}
+
+
+def _mask_value(value: object) -> object:
+    if isinstance(value, str):
+        return mask_sensitive_data(value)
+    return "***"
+
+
+def sanitize_payload(payload: object) -> object:
+    """Sanitize dict/list payloads for safe logging."""
+    if isinstance(payload, dict):
+        sanitized: dict[object, object] = {}
+        for key, value in payload.items():
+            key_str = str(key).lower()
+            if key_str in SENSITIVE_KEYS:
+                sanitized[key] = _mask_value(value)
+            else:
+                sanitized[key] = sanitize_payload(value)
+        return sanitized
+    if isinstance(payload, list):
+        return [sanitize_payload(item) for item in payload]
+    if isinstance(payload, tuple):
+        return tuple(sanitize_payload(item) for item in payload)
+    return payload
+
+
+_JSON_KV_RE = re.compile(
+    r'(?i)("?(?:access_token|refresh_token|token|jwt-token|password|client_secret|authorization)"?\s*[:=]\s*")([^"]+)(")'
+)
+_BEARER_RE = re.compile(r"(?i)(Bearer\s+)([A-Za-z0-9\-\._~\+\/]+=*)")
+
+
+def sanitize_text(text: str) -> str:
+    """Sanitize sensitive values inside free-form text."""
+    try:
+        parsed = json.loads(text)
+    except Exception:
+        parsed = None
+
+    if parsed is not None:
+        return json.dumps(sanitize_payload(parsed))
+
+    def _mask_json_kv(match: re.Match[str]) -> str:
+        return f"{match.group(1)}{mask_sensitive_data(match.group(2))}{match.group(3)}"
+
+    sanitized = _JSON_KV_RE.sub(_mask_json_kv, text)
+    sanitized = _BEARER_RE.sub(
+        lambda m: f"{m.group(1)}{mask_sensitive_data(m.group(2))}", sanitized
+    )
+    return sanitized

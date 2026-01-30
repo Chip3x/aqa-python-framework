@@ -1,41 +1,28 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
-class LoginRequest(BaseModel):
+class LoginCredentials(BaseModel):
     """Login request model."""
 
     email: EmailStr
     password: str = Field(min_length=1)
 
 
-class LoginResponse(BaseModel):
-    """Login response model."""
+class UserProfileCreateRequest(BaseModel):
+    """User registration request model."""
 
-    access_token: str
-    token_type: str = "bearer"
-    expires_in: int | None = None
-    refresh_token: str | None = None
+    model_config = ConfigDict(populate_by_name=True)
 
-
-class TokenRefreshRequest(BaseModel):
-    """Token refresh request model."""
-
-    refresh_token: str
+    first_name: str = Field(alias="firstName", min_length=1, max_length=255)
+    last_name: str = Field(alias="lastName", min_length=1, max_length=255)
+    email: EmailStr
+    date_of_birth: str = Field(alias="dateOfBirth", min_length=1, max_length=20)
+    password: str = Field(min_length=1, max_length=20)
 
 
-class OAuthTokenRequest(BaseModel):
-    """OAuth token request model."""
+class JwtTokenResponse(BaseModel):
+    """JWT token response model."""
 
-    grant_type: str = "client_credentials"
-    client_id: str
-    client_secret: str
-    scope: str | None = None
+    model_config = ConfigDict(populate_by_name=True)
 
-
-class OAuthTokenResponse(BaseModel):
-    """OAuth token response model."""
-
-    access_token: str
-    token_type: str = "bearer"
-    expires_in: int
-    scope: str | None = None
+    jwt_token: str = Field(alias="jwt-token")

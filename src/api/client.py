@@ -3,7 +3,8 @@ from typing import Any
 import allure
 import httpx
 
-from config import settings
+from config.settings import Settings
+from src.utils.helpers import sanitize_payload, sanitize_text
 from src.utils.logger import logger
 
 
@@ -12,6 +13,7 @@ class APIClient:
 
     def __init__(
         self,
+        settings: Settings,
         base_url: str | None = None,
         timeout: float | None = None,
         headers: dict[str, str] | None = None,
@@ -23,11 +25,13 @@ class APIClient:
             timeout: Request timeout in seconds. Defaults to settings.api_timeout_seconds.
             headers: Default headers for all requests.
         """
+        self._settings = settings
         self.base_url = base_url or settings.api_url
         self.timeout = timeout or settings.api_timeout_seconds
         self._default_headers = headers or {}
         self._token: str | None = None
         self._client: httpx.Client | None = None
+        self._log_sensitive = settings.log_sensitive
 
     @property
     def client(self) -> httpx.Client:
@@ -47,7 +51,7 @@ class APIClient:
             token: JWT or OAuth token.
         """
         self._token = token
-        logger.debug(f"Token set: {token[:20]}...")
+        logger.debug("Token set")
 
     def clear_token(self) -> None:
         """Clear authorization token."""
@@ -73,15 +77,22 @@ class APIClient:
     def _log_request(self, method: str, url: str, **kwargs: Any) -> None:
         """Log request details."""
         logger.info(f"Request: {method} {url}")
+        if not self._log_sensitive:
+            return
         if kwargs.get("json"):
-            logger.debug(f"Body: {kwargs['json']}")
+            logger.debug(f"Body: {sanitize_payload(kwargs['json'])}")
+        if kwargs.get("data"):
+            logger.debug(f"Body: {sanitize_payload(kwargs['data'])}")
         if kwargs.get("params"):
-            logger.debug(f"Params: {kwargs['params']}")
+            logger.debug(f"Params: {sanitize_payload(kwargs['params'])}")
 
     def _log_response(self, response: httpx.Response) -> None:
         """Log response details."""
         logger.info(f"Response: {response.status_code} {response.reason_phrase}")
-        logger.debug(f"Response body: {response.text[:500]}")
+        if not self._log_sensitive:
+            return
+        safe_text = sanitize_text(response.text)
+        logger.debug(f"Response body: {safe_text[:500]}")
 
     @allure.step("GET {url}")
     def get(

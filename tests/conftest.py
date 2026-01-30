@@ -1,6 +1,10 @@
+from collections.abc import Generator
+from typing import Any
+
 import pytest
 
 from config.settings import Settings, get_settings
+from src.utils.test_data_manager import TestDataManager
 
 # Import all fixtures from fixtures module
 pytest_plugins = [
@@ -47,18 +51,18 @@ def settings(request: pytest.FixtureRequest) -> Settings:
     env = request.config.getoption("--env")
     # Clear cache to reload settings
     get_settings.cache_clear()
-    return get_settings(env)
+    loaded_settings = get_settings(env)
+    loaded_settings.validate_runtime()
+    return loaded_settings
 
 
 @pytest.fixture(scope="session", autouse=True)
-def configure_settings(request: pytest.FixtureRequest) -> None:
+def configure_settings(request: pytest.FixtureRequest, settings: Settings) -> None:
     """Configure settings from CLI options.
 
     Args:
         request: Pytest request with CLI options.
     """
-    from config import settings
-
     # Override browser if specified
     browser = request.config.getoption("--browser")
     if browser:
@@ -69,13 +73,21 @@ def configure_settings(request: pytest.FixtureRequest) -> None:
         object.__setattr__(settings, "headless", False)
 
 
+@pytest.fixture
+def test_data_manager() -> Generator[TestDataManager, None, None]:
+    """Create test data manager and cleanup after test."""
+    manager = TestDataManager()
+    yield manager
+    manager.cleanup_all()
+
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
-def pytest_runtest_makereport(item: pytest.Item):
+def pytest_runtest_makereport(item: pytest.Item) -> Generator[None, Any, None]:
     """Store test result for fixture access (screenshot on failure).
 
     Args:
         item: Test item.
     """
-    outcome = yield
+    outcome: Any = yield
     rep = outcome.get_result()
     setattr(item, f"rep_{rep.when}", rep)

@@ -10,20 +10,21 @@ class LoginPage(BasePage):
     url_path = "/login"
 
     # Selectors
-    EMAIL_INPUT = "[data-testid='email-input']"
-    PASSWORD_INPUT = "[data-testid='password-input']"
-    LOGIN_BUTTON = "[data-testid='login-button']"
+    EMAIL_INPUT = "//input[@name='email']"
+    PASSWORD_INPUT = "//input[@name='password']"
+    LOGIN_BUTTON = "//button[@type='submit' and normalize-space()='Sign in']"
     ERROR_MESSAGE = "[data-testid='error-message']"
     REMEMBER_ME_CHECKBOX = "[data-testid='remember-me']"
     FORGOT_PASSWORD_LINK = "[data-testid='forgot-password']"
 
-    def __init__(self, page: Page) -> None:
+    def __init__(self, page: Page, base_url: str) -> None:
         """Initialize login page.
 
         Args:
             page: Playwright page instance.
+            base_url: Base URL for UI tests.
         """
-        super().__init__(page)
+        super().__init__(page, base_url)
 
     @allure.step("Enter email: {email}")
     def enter_email(self, email: str) -> "LoginPage":

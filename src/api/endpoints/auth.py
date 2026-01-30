@@ -1,29 +1,27 @@
+from typing import Any, cast
+
 import allure
 
+from config.settings import Settings
 from src.api.client import APIClient
-from src.api.models.auth import (
-    LoginRequest,
-    LoginResponse,
-    OAuthTokenRequest,
-    OAuthTokenResponse,
-    TokenRefreshRequest,
-)
+from src.api.models.auth import LoginCredentials, UserProfileCreateRequest
 
 
 class AuthAPI:
     """Authentication API endpoints."""
 
-    def __init__(self, client: APIClient) -> None:
+    def __init__(self, client: APIClient, settings: Settings) -> None:
         """Initialize Auth API.
 
         Args:
             client: API client instance.
+            settings: Settings instance.
         """
         self.client = client
-        self._base_path = "/auth"
+        self._settings = settings
 
     @allure.step("Login with email: {email}")
-    def login(self, email: str, password: str) -> LoginResponse:
+    def login(self, email: str, password: str) -> str:
         """Authenticate user with email and password.
 
         Args:
@@ -31,60 +29,74 @@ class AuthAPI:
             password: User password.
 
         Returns:
-            Login response with tokens.
+            JWT token string.
         """
-        request = LoginRequest(email=email, password=password)
-        response = self.client.post(f"{self._base_path}/login", json=request.model_dump())
-        response.raise_for_status()
-        return LoginResponse.model_validate(response.json())
+        payload = self.login_response(email, password)
+        return self._extract_token(payload)
 
-    @allure.step("Refresh access token")
-    def refresh_token(self, refresh_token: str) -> LoginResponse:
-        """Refresh access token using refresh token.
-
-        Args:
-            refresh_token: Valid refresh token.
-
-        Returns:
-            New login response with tokens.
-        """
-        request = TokenRefreshRequest(refresh_token=refresh_token)
-        response = self.client.post(f"{self._base_path}/refresh", json=request.model_dump())
-        response.raise_for_status()
-        return LoginResponse.model_validate(response.json())
-
-    @allure.step("Get OAuth token")
-    def get_oauth_token(
+    @allure.step("Register user with email: {email}")
+    def register(
         self,
-        client_id: str,
-        client_secret: str,
-        scope: str | None = None,
-    ) -> OAuthTokenResponse:
-        """Get OAuth access token using client credentials.
+        email: str,
+        password: str,
+        first_name: str,
+        last_name: str,
+        date_of_birth: str,
+    ) -> str:
+        """Register user.
 
         Args:
-            client_id: OAuth client ID.
-            client_secret: OAuth client secret.
-            scope: Optional OAuth scope.
+            email: User email.
+            password: User password.
+            first_name: User first name.
+            last_name: User last name.
+            date_of_birth: Date of birth in DD.MM.YYYY format.
 
         Returns:
-            OAuth token response.
+            JWT token string.
         """
-        request = OAuthTokenRequest(
-            client_id=client_id,
-            client_secret=client_secret,
-            scope=scope,
+        payload = self.register_response(email, password, first_name, last_name, date_of_birth)
+        return self._extract_token(payload)
+
+    @allure.step("Login response with email: {email}")
+    def login_response(self, email: str, password: str) -> dict[str, Any]:
+        """Return raw login response payload."""
+        request = LoginCredentials(email=email, password=password)
+        response = self.client.post(self._settings.auth_login_path, json=request.model_dump())
+        response.raise_for_status()
+        return cast(dict[str, Any], response.json())
+
+    @allure.step("Register response with email: {email}")
+    def register_response(
+        self,
+        email: str,
+        password: str,
+        first_name: str,
+        last_name: str,
+        date_of_birth: str,
+    ) -> dict[str, Any]:
+        """Return raw registration response payload."""
+        request = UserProfileCreateRequest(
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            date_of_birth=date_of_birth,
         )
         response = self.client.post(
-            f"{self._base_path}/oauth/token",
-            data=request.model_dump(exclude_none=True),
+            self._settings.auth_register_path,
+            json=request.model_dump(by_alias=True),
         )
         response.raise_for_status()
-        return OAuthTokenResponse.model_validate(response.json())
+        return cast(dict[str, Any], response.json())
 
-    @allure.step("Logout")
-    def logout(self) -> None:
-        """Logout current user and invalidate tokens."""
-        response = self.client.post(f"{self._base_path}/logout")
-        response.raise_for_status()
-        self.client.clear_token()
+    def _extract_token(self, payload: dict[str, object]) -> str:
+        token_field = self._settings.auth_token_field
+        raw_token = payload.get(token_field)
+        if not isinstance(raw_token, str) or not raw_token:
+            raise ValueError(f"Token field '{token_field}' not found in response")
+        return raw_token
+
+    def extract_token(self, payload: dict[str, object]) -> str:
+        """Public token extractor for service layer."""
+        return self._extract_token(payload)

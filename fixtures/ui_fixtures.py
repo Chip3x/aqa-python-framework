@@ -4,7 +4,7 @@ import allure
 import pytest
 from playwright.sync_api import Browser, BrowserContext, Page, Playwright, sync_playwright
 
-from config import settings
+from config.settings import Settings
 from src.ui.pages.dashboard_page import DashboardPage
 from src.ui.pages.login_page import LoginPage
 
@@ -21,7 +21,7 @@ def playwright_instance() -> Generator[Playwright, None, None]:
 
 
 @pytest.fixture(scope="session")
-def browser(playwright_instance: Playwright) -> Generator[Browser, None, None]:
+def browser(settings: Settings, playwright_instance: Playwright) -> Generator[Browser, None, None]:
     """Launch browser based on settings.
 
     Args:
@@ -40,7 +40,7 @@ def browser(playwright_instance: Playwright) -> Generator[Browser, None, None]:
 
 
 @pytest.fixture
-def context(browser: Browser) -> Generator[BrowserContext, None, None]:
+def context(settings: Settings, browser: Browser) -> Generator[BrowserContext, None, None]:
     """Create browser context for test isolation.
 
     Args:
@@ -85,7 +85,7 @@ def page(context: BrowserContext, request: pytest.FixtureRequest) -> Generator[P
 
 
 @pytest.fixture
-def login_page(page: Page) -> LoginPage:
+def login_page(settings: Settings, page: Page) -> LoginPage:
     """Create login page object.
 
     Args:
@@ -94,11 +94,11 @@ def login_page(page: Page) -> LoginPage:
     Returns:
         Login page instance.
     """
-    return LoginPage(page)
+    return LoginPage(page, settings.base_url)
 
 
 @pytest.fixture
-def dashboard_page(page: Page) -> DashboardPage:
+def dashboard_page(settings: Settings, page: Page) -> DashboardPage:
     """Create dashboard page object.
 
     Args:
@@ -107,11 +107,11 @@ def dashboard_page(page: Page) -> DashboardPage:
     Returns:
         Dashboard page instance.
     """
-    return DashboardPage(page)
+    return DashboardPage(page, settings.base_url)
 
 
 @pytest.fixture
-def authenticated_page(page: Page, login_page: LoginPage) -> Page:
+def authenticated_page(settings: Settings, page: Page, login_page: LoginPage) -> Page:
     """Create page with authenticated user.
 
     Args:

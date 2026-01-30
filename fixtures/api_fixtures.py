@@ -2,26 +2,36 @@ from collections.abc import Generator
 
 import pytest
 
+from config.settings import Settings
 from src.api.client import APIClient
 from src.api.endpoints.auth import AuthAPI
 from src.api.endpoints.users import UsersAPI
+from src.api.sdk import ApiContext
 from src.utils.auth_helper import AuthHelper
 
 
 @pytest.fixture
-def api_client() -> Generator[APIClient, None, None]:
+def api_client(settings: Settings) -> Generator[APIClient, None, None]:
     """Create API client instance.
 
     Yields:
         API client.
     """
-    client = APIClient()
+    client = APIClient(settings=settings)
     yield client
     client.close()
 
 
 @pytest.fixture
-def auth_helper(api_client: APIClient) -> AuthHelper:
+def api_context(settings: Settings) -> Generator[ApiContext, None, None]:
+    """Create API context with client and endpoints."""
+    context = ApiContext(settings)
+    yield context
+    context.close()
+
+
+@pytest.fixture
+def auth_helper(settings: Settings, api_client: APIClient) -> AuthHelper:
     """Create auth helper with API client.
 
     Args:
@@ -30,7 +40,7 @@ def auth_helper(api_client: APIClient) -> AuthHelper:
     Returns:
         Auth helper instance.
     """
-    return AuthHelper(api_client)
+    return AuthHelper(settings, api_client)
 
 
 @pytest.fixture
@@ -48,21 +58,7 @@ def authenticated_client(auth_helper: AuthHelper) -> APIClient:
 
 
 @pytest.fixture
-def oauth_client(auth_helper: AuthHelper) -> APIClient:
-    """Create API client authenticated with OAuth.
-
-    Args:
-        auth_helper: Auth helper fixture.
-
-    Returns:
-        OAuth authenticated API client.
-    """
-    auth_helper.login_with_oauth()
-    return auth_helper.client
-
-
-@pytest.fixture
-def auth_api(api_client: APIClient) -> AuthAPI:
+def auth_api(settings: Settings, api_client: APIClient) -> AuthAPI:
     """Create Auth API instance.
 
     Args:
@@ -71,7 +67,7 @@ def auth_api(api_client: APIClient) -> AuthAPI:
     Returns:
         Auth API instance.
     """
-    return AuthAPI(api_client)
+    return AuthAPI(api_client, settings)
 
 
 @pytest.fixture

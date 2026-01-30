@@ -18,13 +18,14 @@ class DashboardPage(BasePage):
     NOTIFICATIONS_ICON = "[data-testid='notifications']"
     SETTINGS_LINK = "[data-testid='settings-link']"
 
-    def __init__(self, page: Page) -> None:
+    def __init__(self, page: Page, base_url: str) -> None:
         """Initialize dashboard page.
 
         Args:
             page: Playwright page instance.
+            base_url: Base URL for UI tests.
         """
-        super().__init__(page)
+        super().__init__(page, base_url)
 
     def get_welcome_message(self) -> str:
         """Get welcome message text.
